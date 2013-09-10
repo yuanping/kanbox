@@ -1,7 +1,7 @@
 酷盘 Ruby SDK
 =============
 
-http://kanbox.com
+酷盘 ([kanbox.com](http://kanbox.com)) API for Ruby
 
 ## Installation
 
