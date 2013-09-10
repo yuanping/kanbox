@@ -2,7 +2,7 @@ require 'active_support/core_ext/object/blank'
 require 'active_support/core_ext/class/attribute'
 require 'active_support/concern'
 
-%w(models/base models/file_info models/user client).each do |fname|
+%w(models/base models/file_info models/user models/result client).each do |fname|
   require File.expand_path("../kanbox/#{fname}", __FILE__)
 end
 
