@@ -1,7 +1,7 @@
 require "json"
 module Kanbox
   class Result < Base
-    attr_accessor :success, :error_code
+    attr_accessor :success, :error_code, :raw
     
     def to_s
       { success: self.success, error_code: self.error_code }.to_s
@@ -11,6 +11,7 @@ module Kanbox
       r = Result.new(success: false, error_code: nil)
       return r if body.blank?
       json = JSON.parse(body)
+      r.raw = json
       if json['status'] == 'ok'
         r.success = true
       else

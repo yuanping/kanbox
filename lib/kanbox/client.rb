@@ -107,12 +107,18 @@ module Kanbox
     end
     
     def mkdir(path)
+      response = self.access_token.get(self.api_url("create_folder/#{path}"))
+      status response
     end
 
-    def share(path, with_users)
+    def share(path, with_emails)
+      response = self.access_token.post(self.api_url("share/#{path}"),"{#{with_emails}}")
+      status response
     end
 
     def pending_shares
+      response = self.access_token.get(self.api_url("pendingshares/#{path}"))
+      status response
     end
   end
 end

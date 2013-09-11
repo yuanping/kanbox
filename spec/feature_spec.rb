@@ -9,6 +9,7 @@ describe "Kanbox" do
       print "Code:"
       auth_code = $stdin.gets.chomp.split("\n").first
       $client.token!(auth_code)
+      puts "access_token = %s" % $client.access_token.token
       # TODO: auth_code will get failed with $client.token! in sometimes
     end
 
@@ -66,12 +67,27 @@ describe "Kanbox" do
       end
       
       it "#head should work" do
-        $client.head(@save_path).status.should == 200
+        response = $client.head(@save_path)
+        response.status.should == 200
       end
       
       it "#get should work" do
         response = $client.get(@save_path)
         response.status.should == 200
+      end
+      
+      it "#mkdir should work" do
+        result = $client.mkdir("a")
+        result.success.should be_true
+        
+        # upload file into a folder
+        result1 = $client.put("a/#{@save_path}",@source_path)
+        result1.success.should be_true
+        
+        $client.head("a/#{@save_path}").status.should == 200
+        
+        # delete folder
+        $client.delete("a/").success.should be_true
       end
       
       it "#copy should work" do
@@ -91,6 +107,15 @@ describe "Kanbox" do
         # $client.head(from_path).status.should == 404
         $client.head(new_path).status.should == 200
       end
+      
+      # it "#share should work" do
+      #   result = $client.share(@save_path,%W(huacnlee@qq.com foo@bar.com))
+      #   result.success.should be_true
+      #   result.raw['results'].count.should == 2
+      #   for item in result.raw['results']
+      #     item['status'].should == 'ok'
+      #   end
+      # end
       
       it "#delete should work" do
         path = "1_#{@save_path}"
