@@ -1,5 +1,9 @@
 require "json"
 module Kanbox
+  
+=begin rdoc
+  API Result model
+=end
   class Result < Base
     attr_accessor :success, :error_code, :raw
     
