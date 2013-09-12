@@ -18,7 +18,7 @@ require "kanbox"
 
 $client = Kanbox.configure do |config|
   config.api_key = "you client id"
-  config.api_secert = "you client secert"
+  config.api_secret = "you client secert"
 end
 ```
 

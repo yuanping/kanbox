@@ -5,7 +5,7 @@ module Kanbox
   ##
   # Kanbox Client - methods for Authorization and access API
   class Client
-    attr_accessor :api_key, :api_secert, :config
+    attr_accessor :api_key, :api_secret, :config
     ##
     # OAuth2::AccessToken
     #
@@ -19,7 +19,7 @@ module Kanbox
     ##
     # OAuth2::Client instance with kanbox OAuth
     def oauth_client
-      @oauth_client ||= OAuth2::Client.new(self.api_key,self.api_secert,
+      @oauth_client ||= OAuth2::Client.new(self.api_key,self.api_secret,
                                       site: "https://auth.kanbox.com",
                                       authorize_url: "/0/auth",
                                       token_url: "/0/token")
