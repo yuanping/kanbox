@@ -3,6 +3,8 @@
 
 酷盘 ([kanbox.com](http://kanbox.com)) API for Ruby
 
+[![Gem Version](https://badge.fury.io/rb/kanbox.png)](https://rubygems.org/gems/kanbox)
+
 ## Installation
 
 ```bash
