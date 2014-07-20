@@ -2,6 +2,8 @@ require 'oauth2'
 require "json"
 
 module Kanbox
+  
+  BASE_URL = 'https://api.kanbox.com/0'
   ##
   # Kanbox Client - methods for Authorization and access API
   class Client
@@ -12,8 +14,14 @@ module Kanbox
     # Store authorized infos
     attr_accessor :access_token
 
-    def initialize(&block)
+    # @param [String] token the Access Token value
+    # @param [Hash] opts the options to create the Access Token with
+    # @option opts [String] :refresh_token (nil) the refresh_token value
+    # @option opts [FixNum, String] :expires_in (nil) the number of seconds in which the AccessToken will expire
+    # @option opts [FixNum, String] :expires_at (nil) the epoch time in seconds in which AccessToken will expire
+    def initialize(token=nil, opts={}, &block)
       instance_eval &block
+      self.access_token = OAuth2::AccessToken.new(self.oauth_client, token, opts) if token
     end
 
     ##
@@ -97,9 +105,17 @@ You can store #access_token.token in you database or local file, when you restar
     def revert_token!(access_token)
       self.access_token = OAuth2::AccessToken.new(self.oauth_client,access_token)
     end
+    
+    def valid_token
+      if access_token.expired?
+        self.access_token = access_token.refresh!
+      end
+      self.access_token
+    end
+
 
     def api_url(path)
-      URI.parse(["https://api.kanbox.com/0",path].join("/"))
+      URI.parse([BASE_URL, URI::encode(path)].join("/"))
     end
 
     def status(response)
@@ -108,20 +124,21 @@ You can store #access_token.token in you database or local file, when you restar
     end
 
     def profile
-      response = self.access_token.get(self.api_url("info")).body
+      response = valid_token.get(self.api_url("info")).body
       json = JSON.parse(response)
       return nil if json['status'] != 'ok'
       return User.new(email: json['email'], space_quota: json['spaceQuota'], space_used: json['spaceUsed'])
     end
 
-    def files
-      response = self.access_token.get(self.api_url("list")).body
+    def files(path=nil)
+      url = self.api_url("list#{path if path}")
+      response = valid_token.get(url).body
       json = JSON.parse(response)
       return [] if json['status'] != 'ok'
       files = []
       for item in json['contents']
         files << FileInfo.new(full_path: item['fullPath'],
-                              updated_at: Date.parse(item['modificationDate']),
+                              updated_at: Time.parse(item['modificationDate']),
                               size: item['fileSize'],
                               is_folder: item['fileSize'])
       end
@@ -129,21 +146,21 @@ You can store #access_token.token in you database or local file, when you restar
     end
 
     def get(path)
-      response = self.access_token.get(self.api_url("download/#{path}"))
+      response = valid_token.get(self.api_url("download/#{path}"))
       return response
     end
 
     def head(path)
-      response = self.access_token.get(self.api_url("download/#{path}"))
+      response = valid_token.get(self.api_url("download/#{path}"))
       return response
     end
 
-    def put(path, source_file_path, opts = {})
+    def put(path, file, opts = {})
       # TODO: use ruby stdlib to instead rest-client
       require 'rest-client'
-      f = File.open(source_file_path)
+      
       url = "https://api-upload.kanbox.com/0/upload/#{path}"
-      response = RestClient.post(url,f, self.access_token.headers)
+      response = RestClient.post(URI::encode(url), file, valid_token.headers)
       result = Result.new
       if response == "1"
         result.success = true
@@ -153,35 +170,37 @@ You can store #access_token.token in you database or local file, when you restar
       end
       result
     end
-
+    
     def copy(path,destination_path)
-      response = self.access_token.get(self.api_url("copy/#{path}?destination_path=/#{destination_path}"))
+      response = valid_token.get(self.api_url("copy/#{path}?destination_path=/#{destination_path}"))
       status response
     end
 
     def move(path,destination_path)
-      response = self.access_token.get(self.api_url("move/#{path}?destination_path=/#{destination_path}"))
+      response = valid_token.get(self.api_url("move/#{path}?destination_path=/#{destination_path}"))
       status response
     end
 
     def delete(path)
-      response = self.access_token.get(self.api_url("delete/#{path}"))
+      response = valid_token.get(self.api_url("delete/#{path}"))
       status response
     end
 
     def mkdir(path)
-      response = self.access_token.get(self.api_url("create_folder/#{path}"))
+      response = valid_token.get(self.api_url("create_folder/#{path}"))
       status response
     end
 
     def share(path, with_emails)
-      response = self.access_token.post(self.api_url("share/#{path}"),"{#{with_emails}}")
+      response = valid_token.post(self.api_url("share/#{path}"),"{#{with_emails}}")
       status response
     end
 
     def pending_shares
-      response = self.access_token.get(self.api_url("pendingshares/#{path}"))
+      response = valid_token.get(self.api_url("pendingshares/#{path}"))
       status response
     end
+    
+    
   end
 end
