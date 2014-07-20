@@ -156,6 +156,7 @@ You can store #access_token.token in you database or local file, when you restar
     end
 
     def put(path, file, opts = {})
+      path.slice!(0) if path.start_with? '/'
       # TODO: use ruby stdlib to instead rest-client
       require 'rest-client'
       
